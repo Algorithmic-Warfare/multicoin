@@ -1,14 +1,14 @@
-# MultiCoin - ERC1155-like Multi-Token Standard for Sui
+# MultiCoin - ERC1155-like Multi-Asset Standard for Sui
 
-A complete implementation of an ERC1155-like multi-token standard on Sui blockchain, providing efficient management of multiple fungible token types within a single collection.
+A complete implementation of an ERC1155-like multi-asset standard on Sui blockchain, providing efficient management of multiple fungible asset types within a single collection.
 
 ## Features
 
-- **Multiple Token Types**: Single collection can manage many different token types
-- **Batch Operations**: Mint, transfer, and burn multiple token types in one transaction
-- **Bit-Packed Token IDs**: Efficient u128 token IDs encoding location (64 bits) + item (64 bits)
-- **On-Chain Supply Tracking**: Real-time supply tracking for each token type
-- **Metadata Support**: Optional on-chain metadata per token type
+- **Multiple Asset Types**: Single collection can manage many different asset types
+- **Batch Operations**: Mint, transfer, and burn multiple asset types in one transaction
+- **Bit-Packed Asset IDs**: Efficient u128 asset IDs encoding location (64 bits) + item (64 bits)
+- **On-Chain Supply Tracking**: Real-time supply tracking for each asset type
+- **Metadata Support**: Optional on-chain metadata per asset type
 - **Events**: Full event emission for minting, burning, and transfers
 - **Move 2024 Syntax**: Modern method call syntax and proper error handling
 
@@ -128,28 +128,28 @@ The MultiCoin module (`packages/contracts/sources/multicoin.move`) provides:
 ### Key Structs
 - `Collection` - Shared collection container with metadata and supply tracking
 - `CollectionCap` - Admin capability for minting and metadata management
-- `Balance` - Owned token balance (similar to `Coin<T>`)
+- `Balance` - Owned asset balance (similar to `Coin<T>`)
 
 ### Main Functions
 - Collection creation (`create_collection`, `new_collection`)
-- Token minting (`mint`, `mint_balance`, `batch_mint`)
+- Asset minting (`mint`, `mint_balance`, `batch_mint`)
 - Balance operations (`split`, `join`, `split_and_transfer`)
-- Token burning (`burn`, `batch_burn`) - requires collection reference for supply tracking
+- Asset burning (`burn`, `batch_burn`) - requires collection reference for supply tracking
 - Metadata management (`set_metadata`, `get_metadata`, `has_metadata`)
 - Supply queries (`total_supply`)
 - Transfer operations (`transfer`, `batch_transfer`)
 
-### Token ID System
-Token IDs are u128 values with bit-packing:
+### Asset ID System
+Asset IDs are u128 values with bit-packing:
 - Upper 64 bits: Location ID (e.g., game zone, dungeon level)
 - Lower 64 bits: Item ID (e.g., item type within location)
 
-Helper functions: `make_token_id(location, item)`, `location_id(token_id)`, `item_id(token_id)`
+Helper functions: `make_asset_id(location, item)`, `location_id(asset_id)`, `item_id(asset_id)`
 
 ### Events
-- `MintEvent` - Emitted when tokens are minted
-- `BurnEvent` - Emitted when tokens are burned
-- `TransferEvent` - Emitted when tokens are transferred
+- `MintEvent` - Emitted when assets are minted
+- `BurnEvent` - Emitted when assets are burned
+- `TransferEvent` - Emitted when assets are transferred
 
 ---
 ## Prerequisites
@@ -184,7 +184,7 @@ mprocs.yaml                            # Dev process orchestration
 ## Use Cases
 
 - **Gaming**: In-game items, equipment, consumables across zones/levels
-- **DeFi**: Multi-asset liquidity positions, tiered reward tokens
+- **DeFi**: Multi-asset liquidity positions, tiered reward assets
 - **NFT Collections**: Fungible NFTs with editions, tiered memberships
 - **Inventory Systems**: Location-based storage, cross-game assets
 

@@ -1,21 +1,21 @@
-# MultiCoin - ERC1155-like Multi-Token Standard for Sui
+# MultiCoin - ERC1155-like Multi-Asset Standard for Sui
 
-A complete implementation of an ERC1155-like multi-token standard on Sui blockchain, providing efficient management of multiple fungible token types within a single collection.
+A complete implementation of an ERC1155-like multi-asset standard on Sui blockchain, providing efficient management of multiple fungible asset types within a single collection.
 
 ## Features
 
 ### Core Capabilities
-- **Multiple Token Types**: Single collection can manage many different token types
-- **Batch Operations**: Mint, transfer, and burn multiple token types in one transaction
-- **Bit-Packed Token IDs**: Efficient u128 token IDs encoding assembly (64 bits) + item (64 bits)
-- **Metadata Support**: Optional on-chain metadata per token type
+- **Multiple Asset Types**: Single collection can manage many different asset types
+- **Batch Operations**: Mint, transfer, and burn multiple asset types in one transaction
+- **Bit-Packed Asset IDs**: Efficient u128 asset IDs encoding assembly (64 bits) + item (64 bits)
+- **Metadata Support**: Optional on-chain metadata per asset type
 - **Events**: Full event emission for minting, burning, and transfers
 - **Zero Balance Handling**: Create and destroy zero-value balances safely
 
 ### ERC1155 Alignment
-- Multi-token collection management
+- Multi-asset collection management
 - Batch minting and transfers
-- Per-token-type metadata
+- Per-asset-type metadata
 - Safe transfer patterns
 - Event emission
 
@@ -47,24 +47,24 @@ public struct CollectionCap has key, store {
 public struct Balance has key, store {
     id: UID,
     collection: ID,
-    token_id: u128,
+    asset_id: u128,
     amount: u64,
 }
 ```
 
-### Token ID Format
+### Asset ID Format
 
-Token IDs are u128 values with bit-packing:
+Asset IDs are u128 values with bit-packing:
 - **Upper 64 bits**: Location ID (e.g., game zone, dungeon level)
 - **Lower 64 bits**: Item ID (e.g., item type within assembly)
 
 ```move
-// Create token ID
-let token_id = make_token_id(100, 42); // assembly=100, item=42
+// Create asset ID
+let asset_id = make_asset_id(100, 42); // assembly=100, item=42
 
 // Extract components
-let assembly = assembly_id(token_id); // 100
-let item = item_id(token_id);         // 42
+let assembly = assembly_id(asset_id); // 100
+let item = item_id(asset_id);         // 42
 ```
 
 ## Usage Examples
@@ -80,24 +80,24 @@ let (collection, cap) = multicoin::new_collection(ctx);
 transfer::share_object(collection);
 ```
 
-### 2. Mint Tokens
+### 2. Mint Assets
 
 ```move
 // Single mint
-let token_id = make_token_id(100, 1); // Location 100, Item 1
-multicoin::mint(&cap, &collection, token_id, 100, recipient, ctx);
+let asset_id = make_asset_id(100, 1); // Location 100, Item 1
+multicoin::mint(&cap, &collection, asset_id, 100, recipient, ctx);
 
 // Batch mint
-let token_ids = vector[
-    make_token_id(100, 1),
-    make_token_id(100, 2),
-    make_token_id(100, 3),
+let asset_ids = vector[
+    make_asset_id(100, 1),
+    make_asset_id(100, 2),
+    make_asset_id(100, 3),
 ];
 let amounts = vector[10, 20, 30];
-multicoin::batch_mint(&cap, &collection, token_ids, amounts, recipient, ctx);
+multicoin::batch_mint(&cap, &collection, asset_ids, amounts, recipient, ctx);
 
 // Mint and keep for composability
-let balance = multicoin::mint_and_keep(&cap, &collection, token_id, 100, ctx);
+let balance = multicoin::mint_and_keep(&cap, &collection, asset_id, 100, ctx);
 ```
 
 ### 3. Split and Join Balances
@@ -106,7 +106,7 @@ let balance = multicoin::mint_and_keep(&cap, &collection, token_id, 100, ctx);
 // Split a balance
 let split_balance = balance.split(30, ctx);
 
-// Join balances of same token type
+// Join balances of same asset type
 balance.join(split_balance);
 
 // Split and transfer in one call
@@ -123,7 +123,7 @@ multicoin::transfer(balance, recipient, ctx);
 multicoin::batch_transfer(balances_vector, recipient, ctx);
 ```
 
-### 5. Burn Tokens
+### 5. Burn Assets
 
 ```move
 // Burn single balance
@@ -138,11 +138,11 @@ multicoin::batch_burn(&mut collection, balances_vector, ctx);
 ```move
 // Set metadata (requires CollectionCap)
 let metadata = b"Iron Sword: A basic weapon";
-cap.set_metadata(&mut collection, token_id, metadata);
+cap.set_metadata(&mut collection, asset_id, metadata);
 
 // Read metadata
-if (collection.has_metadata(token_id)) {
-    let metadata = collection.get_metadata(token_id);
+if (collection.has_metadata(asset_id)) {
+    let metadata = collection.get_metadata(asset_id);
 };
 ```
 
@@ -150,7 +150,7 @@ if (collection.has_metadata(token_id)) {
 
 ```move
 // Create zero balance placeholder
-let zero = multicoin::zero(collection_id, token_id, ctx);
+let zero = multicoin::zero(collection_id, asset_id, ctx);
 
 // Destroy zero balance
 zero.destroy_zero();
@@ -162,27 +162,27 @@ zero.destroy_zero();
 - `create_collection(ctx)` - Entry function to create collection
 - `new_collection(ctx)` - Returns (Collection, CollectionCap)
 
-### Token ID Utilities
-- `make_token_id(assembly_id, item_id)` - Pack into u128
-- `assembly_id(token_id)` - Extract assembly
-- `item_id(token_id)` - Extract item
+### Asset ID Utilities
+- `make_asset_id(assembly_id, item_id)` - Pack into u128
+- `assembly_id(asset_id)` - Extract assembly
+- `item_id(asset_id)` - Extract item
 
 ### Metadata
-- `set_metadata(cap, collection, token_id, data)` - Set/update metadata
-- `get_metadata(collection, token_id)` - Read metadata
-- `has_metadata(collection, token_id)` - Check existence
+- `set_metadata(cap, collection, asset_id, data)` - Set/update metadata
+- `get_metadata(collection, asset_id)` - Read metadata
+- `has_metadata(collection, asset_id)` - Check existence
 
 ### Minting
-- `mint(cap, collection, token_id, amount, recipient, ctx)` - Mint and transfer
-- `mint_balance(cap, collection, token_id, amount, ctx)` - Mint as Balance
-- `batch_mint(cap, collection, token_ids, amounts, recipient, ctx)` - Batch mint
-- `mint_and_keep(cap, collection, token_id, amount, ctx)` - Mint and return
+- `mint(cap, collection, asset_id, amount, recipient, ctx)` - Mint and transfer
+- `mint_balance(cap, collection, asset_id, amount, ctx)` - Mint as Balance
+- `batch_mint(cap, collection, asset_ids, amounts, recipient, ctx)` - Batch mint
+- `mint_and_keep(cap, collection, asset_id, amount, ctx)` - Mint and return
 
 ### Balance Operations
 - `split(balance, amount, ctx)` - Split into two
 - `split_and_transfer(balance, amount, recipient, ctx)` - Split and send
-- `join(self, other)` - Merge same token type
-- `zero(collection_id, token_id, ctx)` - Create zero balance
+- `join(self, other)` - Merge same asset type
+- `zero(collection_id, asset_id, ctx)` - Create zero balance
 - `destroy_zero(balance)` - Destroy zero balance
 
 ### Transfer
@@ -195,17 +195,17 @@ zero.destroy_zero();
 
 ### Accessors
 - `value(balance)` - Get amount
-- `token_id(balance)` - Get token ID
+- `asset_id(balance)` - Get asset ID
 - `collection_id(balance)` - Get collection ID
 - `cap_collection_id(cap)` - Get cap's collection ID
-- `total_supply(collection, token_id)` - Get total supply for token type
+- `total_supply(collection, asset_id)` - Get total supply for asset type
 
 ## Events
 
 ```move
 public struct TransferEvent has copy, drop {
     collection: ID,
-    token_id: u128,
+    asset_id: u128,
     from: address,
     to: address,
     amount: u64,
@@ -213,14 +213,14 @@ public struct TransferEvent has copy, drop {
 
 public struct MintEvent has copy, drop {
     collection: ID,
-    token_id: u128,
+    asset_id: u128,
     to: address,
     amount: u64,
 }
 
 public struct BurnEvent has copy, drop {
     collection: ID,
-    token_id: u128,
+    asset_id: u128,
     from: address,
     amount: u64,
 }
@@ -229,7 +229,7 @@ public struct BurnEvent has copy, drop {
 ## Error Codes
 
 - `EWrongCollection (0)` - Balance doesn't belong to this collection
-- `EWrongTokenId (1)` - Token IDs don't match
+- `EWrongAssetId (1)` - Asset IDs don't match
 - `EInsufficientBalance (2)` - Not enough balance to split/spend
 - `EInvalidArg (3)` - Invalid function arguments
 - `EZeroAmount (4)` - Amount must be greater than zero
@@ -251,11 +251,11 @@ sui move test
 ### DeFi
 - Multi-asset liquidity positions
 - Synthetic assets with variants
-- Tiered reward tokens
+- Tiered reward assets
 
 ### NFT Collections
 - Fungible NFTs with editions
-- Tiered membership tokens
+- Tiered membership assets
 - Fractional ownership
 
 ### Inventory Systems
@@ -267,7 +267,7 @@ sui move test
 
 | Feature | ERC1155 | MultiCoin |
 |---------|---------|-----------||
-| Multi-token support | Yes | Yes |
+| Multi-asset support | Yes | Yes |
 | Batch operations | Yes | Yes |
 | Metadata | Yes | Yes |
 | Balance tracking | Contract storage | Individual objects |
@@ -277,7 +277,7 @@ sui move test
 
 ## Security Considerations
 
-1. **CollectionCap**: Only holders can mint tokens - protect this capability
+1. **CollectionCap**: Only holders can mint assets - protect this capability
 2. **Shared Collection**: Collection is shared object, metadata can be read by anyone
 3. **Balance Objects**: Each balance is an owned object - standard Sui security model
 4. **Zero Amounts**: Prevented at mint/split level to avoid spam

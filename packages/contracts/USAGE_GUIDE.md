@@ -11,7 +11,7 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.sui.io | sh
 # Create a new address (if needed)
 sui client new-address ed25519
 
-# Get testnet SUI tokens
+# Get testnet SUI assets
 sui client faucet
 ```
 
@@ -66,21 +66,21 @@ console.log('CollectionCap ID:', capId);
 
 ## 2. Mint Balance on the Collection
 
-### Prepare Token ID
+### Prepare Asset ID
 
 ```typescript
-// Token ID = (location_id << 64) | item_id
+// Asset ID = (location_id << 64) | item_id
 // Example: location=100, item=1
 const locationId = 100n;
 const itemId = 1n;
-const tokenId = (locationId << 64n) | itemId;
+const assetId = (locationId << 64n) | itemId;
 // Result: 1844674407370955162n
 ```
 
 ### Using Sui CLI
 
 ```bash
-# Mint 1000 tokens to recipient
+# Mint 1000 assets to recipient
 sui client call \
   --package <PACKAGE_ID> \
   --module multicoin \
@@ -94,13 +94,13 @@ sui client call \
 ```typescript
 const tx = new Transaction();
 
-// Mint tokens
+// Mint assets
 tx.moveCall({
   target: `${packageId}::multicoin::mint`,
   arguments: [
     tx.object(collectionCapId),     // CollectionCap
     tx.object(collectionId),         // Collection (shared object)
-    tx.pure.u128(tokenId),          // token_id
+    tx.pure.u128(assetId),          // asset_id
     tx.pure.u64(1000),              // amount
     tx.pure.address(recipientAddress), // recipient
   ],
@@ -119,13 +119,13 @@ const balanceId = result.objectChanges?.find(
 console.log('Balance created:', balanceId);
 ```
 
-### Batch Mint Multiple Token Types
+### Batch Mint Multiple Asset Types
 
 ```typescript
 const tx = new Transaction();
 
-// Prepare token IDs and amounts
-const tokenIds = [
+// Prepare asset IDs and amounts
+const assetIds = [
   (100n << 64n) | 1n,  // Sword
   (100n << 64n) | 2n,  // Shield
   (100n << 64n) | 3n,  // Potion
@@ -138,7 +138,7 @@ tx.moveCall({
   arguments: [
     tx.object(collectionCapId),
     tx.object(collectionId),
-    tx.pure(tokenIds.map(id => ['u128', id.toString()])),
+    tx.pure(assetIds.map(id => ['u128', id.toString()])),
     tx.pure(amounts.map(amt => ['u64', amt])),
     tx.pure.address(recipientAddress),
   ],
@@ -186,19 +186,19 @@ async function getBalances(ownerAddress: string) {
     if (content?.dataType === 'moveObject') {
       const fields = content.fields as {
         collection: string;
-        token_id: string;
+        asset_id: string;
         amount: string;
       };
       
-      // Decode token_id into location and item
-      const tokenId = BigInt(fields.token_id);
-      const locationId = tokenId >> 64n;
-      const itemId = tokenId & ((1n << 64n) - 1n);
+      // Decode asset_id into location and item
+      const assetId = BigInt(fields.asset_id);
+      const locationId = assetId >> 64n;
+      const itemId = assetId & ((1n << 64n) - 1n);
       
       return {
         objectId: obj.data.objectId,
         collection: fields.collection,
-        tokenId: fields.token_id,
+        assetId: fields.asset_id,
         locationId: locationId.toString(),
         itemId: itemId.toString(),
         amount: fields.amount,
@@ -242,7 +242,7 @@ async function getBalanceAmount(balanceObjectId: string): Promise<string> {
 }
 ```
 
-### Check Total Supply for a Token ID
+### Check Total Supply for a Asset ID
 
 The MultiCoin implementation now tracks total supply on-chain in the Collection's supply table. This provides efficient, real-time supply queries.
 
@@ -263,7 +263,7 @@ sui client call \
 ```typescript
 async function getTotalSupply(
   collectionId: string,
-  tokenId: bigint
+  assetId: bigint
 ): Promise<bigint> {
   const tx = new Transaction();
   
@@ -271,7 +271,7 @@ async function getTotalSupply(
     target: `${packageId}::multicoin::total_supply`,
     arguments: [
       tx.object(collectionId),
-      tx.pure.u128(tokenId),
+      tx.pure.u128(assetId),
     ],
   });
 
@@ -295,8 +295,8 @@ async function getTotalSupply(
 }
 
 // Usage
-const tokenId = (100n << 64n) | 1n; // location=100, item=1
-const supply = await getTotalSupply(collectionId, tokenId);
+const assetId = (100n << 64n) | 1n; // location=100, item=1
+const supply = await getTotalSupply(collectionId, assetId);
 console.log('Total supply:', supply);
 ```
 
@@ -313,8 +313,8 @@ public struct Collection has key, store {
 ```
 
 **Supply is automatically updated:**
-- **Mint**: Increases supply when tokens are minted
-- **Burn**: Decreases supply when tokens are burned  
+- **Mint**: Increases supply when assets are minted
+- **Burn**: Decreases supply when assets are burned  
 - **Efficient**: O(1) lookup via table
 - **Real-time**: Always accurate and up-to-date
 
@@ -345,8 +345,8 @@ await client.subscribeEvent({
     MoveEventType: `${packageId}::multicoin::MintEvent`,
   },
   onMessage: (event) => {
-    const { token_id, amount } = event.parsedJson;
-    if (token_id === targetTokenId.toString()) {
+    const { asset_id, amount } = event.parsedJson;
+    if (asset_id === targetAssetId.toString()) {
       totalSupply += BigInt(amount);
     }
   },
@@ -358,8 +358,8 @@ await client.subscribeEvent({
     MoveEventType: `${packageId}::multicoin::BurnEvent`,
   },
   onMessage: (event) => {
-    const { token_id, amount } = event.parsedJson;
-    if (token_id === targetTokenId.toString()) {
+    const { asset_id, amount } = event.parsedJson;
+    if (asset_id === targetAssetId.toString()) {
       totalSupply -= BigInt(amount);
     }
   },
@@ -371,7 +371,7 @@ await client.subscribeEvent({
 ```typescript
 async function calculateSupplyFromEvents(
   collectionId: string,
-  tokenId: bigint
+  assetId: bigint
 ): Promise<bigint> {
   let supply = 0n;
   let cursor: string | null = null;
@@ -387,15 +387,15 @@ async function calculateSupplyFromEvents(
     });
 
     for (const event of mintEvents.data) {
-      const { collection, token_id, amount } = event.parsedJson as {
+      const { collection, asset_id, amount } = event.parsedJson as {
         collection: string;
-        token_id: string;
+        asset_id: string;
         amount: string;
       };
       
       if (
         collection === collectionId &&
-        token_id === tokenId.toString()
+        asset_id === assetId.toString()
       ) {
         supply += BigInt(amount);
       }
@@ -418,15 +418,15 @@ async function calculateSupplyFromEvents(
     });
 
     for (const event of burnEvents.data) {
-      const { collection, token_id, amount } = event.parsedJson as {
+      const { collection, asset_id, amount } = event.parsedJson as {
         collection: string;
-        token_id: string;
+        asset_id: string;
         amount: string;
       };
       
       if (
         collection === collectionId &&
-        token_id === tokenId.toString()
+        asset_id === assetId.toString()
       ) {
         supply -= BigInt(amount);
       }
@@ -458,7 +458,7 @@ console.log('Total supply:', supply);
 ```typescript
 const tx = new Transaction();
 
-// Split 300 tokens from balance and transfer to recipient
+// Split 300 assets from balance and transfer to recipient
 tx.moveCall({
   target: `${packageId}::multicoin::split_and_transfer`,
   arguments: [
@@ -580,17 +580,17 @@ public fun destroy_collection(
 Then clear all metadata first:
 
 ```typescript
-// You'd need to track all token_ids that have metadata
-const tokenIdsWithMetadata = [...]; // Your tracking
+// You'd need to track all asset_ids that have metadata
+const assetIdsWithMetadata = [...]; // Your tracking
 
-for (const tokenId of tokenIdsWithMetadata) {
+for (const assetId of assetIdsWithMetadata) {
   // Add a remove_metadata function to the module
   tx.moveCall({
     target: `${packageId}::multicoin::remove_metadata`,
     arguments: [
       tx.object(collectionCapId),
       tx.object(collectionId),
-      tx.pure.u128(tokenId),
+      tx.pure.u128(assetId),
     ],
   });
 }
@@ -615,7 +615,7 @@ tx.moveCall({
 
 ## Additional Operations
 
-### Set Token Metadata
+### Set Asset Metadata
 
 ```typescript
 const tx = new Transaction();
@@ -627,7 +627,7 @@ tx.moveCall({
   arguments: [
     tx.object(collectionCapId),
     tx.object(collectionId),
-    tx.pure.u128(tokenId),
+    tx.pure.u128(assetId),
     tx.pure(Array.from(metadata)),
   ],
 });
@@ -641,7 +641,7 @@ await client.signAndExecuteTransaction({
 ### Query Metadata
 
 ```typescript
-async function getMetadata(collectionId: string, tokenId: bigint) {
+async function getMetadata(collectionId: string, assetId: bigint) {
   const collection = await client.getObject({
     id: collectionId,
     options: { showContent: true },
@@ -655,7 +655,7 @@ async function getMetadata(collectionId: string, tokenId: bigint) {
     target: `${packageId}::multicoin::get_metadata`,
     arguments: [
       tx.object(collectionId),
-      tx.pure.u128(tokenId),
+      tx.pure.u128(assetId),
     ],
   });
 
@@ -670,7 +670,7 @@ async function getMetadata(collectionId: string, tokenId: bigint) {
 }
 ```
 
-### Burn Tokens
+### Burn Assets
 
 ```typescript
 const tx = new Transaction();
@@ -702,9 +702,9 @@ const unsubscribe = await client.subscribeEvent({
     MoveEventType: `${packageId}::multicoin::MintEvent`,
   },
   onMessage: (event) => {
-    console.log('Token minted:', {
+    console.log('Asset minted:', {
       collection: event.parsedJson.collection,
-      tokenId: event.parsedJson.token_id,
+      assetId: event.parsedJson.asset_id,
       to: event.parsedJson.to,
       amount: event.parsedJson.amount,
     });
@@ -750,16 +750,16 @@ async function fullWorkflow() {
     obj => obj.objectType?.includes('CollectionCap')
   )?.objectId;
 
-  // 2. Mint tokens
+  // 2. Mint assets
   const mintTx = new Transaction();
-  const tokenId = (100n << 64n) | 1n; // location=100, item=1
+  const assetId = (100n << 64n) | 1n; // location=100, item=1
   
   mintTx.moveCall({
     target: `${packageId}::multicoin::mint`,
     arguments: [
       mintTx.object(capId!),
       mintTx.object(collectionId!),
-      mintTx.pure.u128(tokenId),
+      mintTx.pure.u128(assetId),
       mintTx.pure.u64(1000),
       mintTx.pure.address(keypair.toSuiAddress()),
     ],
@@ -820,7 +820,7 @@ fullWorkflow().catch(console.error);
 
 1. **Index Events**: Subscribe to events and maintain an off-chain index for efficient queries
 2. **Batch Operations**: Use `batch_mint` and `batch_transfer` for gas efficiency
-3. **Token ID Convention**: Document your bit-packing scheme (location + item)
+3. **Asset ID Convention**: Document your bit-packing scheme (location + item)
 4. **Metadata**: Keep metadata small or store off-chain (IPFS) with on-chain reference
 5. **Cap Security**: Protect the `CollectionCap` - it's admin control
 6. **Shared Collections**: Collections are shared objects; design for concurrent access
