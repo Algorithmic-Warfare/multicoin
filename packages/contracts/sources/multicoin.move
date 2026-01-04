@@ -64,6 +64,7 @@ const EWrongAssetId: u64 = 1;
 const EInsufficientBalance: u64 = 2;
 const EInvalidArg: u64 = 3;
 const EZeroAmount: u64 = 4;
+const ESupplyNotInitialized: u64 = 5;
 
 /*********************************
  * Core Objects
@@ -82,8 +83,8 @@ public struct SupplyTracker has store {
 /// Shared collection (ERC-1155 "contract")
 public struct Collection has key, store {
     id: UID,
-    metadata: Table<u128, vector<u8>>,
-    supply: Table<u128, SupplyTracker>,
+    metadata: Table<u128, vector<u8>>, // Optional metadata per asset ID
+    supply: Table<u128, SupplyTracker>, // Supply tracker per asset ID
 }
 
 /// Admin capability for minting / control
@@ -228,6 +229,14 @@ entry fun mint(
 ) {
     assert!(amount > 0, EZeroAmount);
     let balance = mint_balance(cap, collection, asset_id, amount, ctx);
+    
+    event::emit(MintEvent {
+        collection: object::id(collection),
+        asset_id,
+        to: recipient,
+        amount,
+    });
+    
     transfer::transfer(balance, recipient);
 }
 
@@ -257,12 +266,8 @@ public fun mint_balance(
     // Store in balance sink for future burns
     tracker.balance_sink.join(minted_balance);
 
-    event::emit(MintEvent {
-        collection: cap.collection,
-        asset_id,
-        to: ctx.sender(),
-        amount,
-    });
+    // Note: MintEvent is emitted by caller (mint() or mint_and_keep())
+    // to ensure correct recipient address is recorded
 
     Balance {
         id: object::new(ctx),
@@ -297,7 +302,17 @@ public fun mint_and_keep(
     amount: u64,
     ctx: &mut TxContext,
 ): Balance {
-    mint_balance(cap, collection, asset_id, amount, ctx)
+    let balance = mint_balance(cap, collection, asset_id, amount, ctx);
+    
+    // Emit event with sender as recipient
+    event::emit(MintEvent {
+        collection: object::id(collection),
+        asset_id,
+        to: ctx.sender(),
+        amount,
+    });
+    
+    balance
 }
 
 /*********************************
@@ -340,11 +355,15 @@ entry fun split_and_transfer(
 }
 
 /// Merge two balances of the same asset type
+/// Aborts if self.amount + other.amount > U64_MAX
 public fun join(self: &mut Balance, other: Balance, ctx: &TxContext) {
     assert!(self.collection == other.collection, EWrongCollection);
     assert!(self.asset_id == other.asset_id, EWrongAssetId);
 
     let amount_to_join = other.amount;
+    let Balance { id, .. } = other;
+    
+    // Add with overflow protection (like coin.move's balance.join)
     self.amount = self.amount + amount_to_join;
 
     event::emit(JoinEvent {
@@ -355,7 +374,6 @@ public fun join(self: &mut Balance, other: Balance, ctx: &TxContext) {
         amount_joined: amount_to_join,
     });
 
-    let Balance { id, .. } = other;
     id.delete();
 }
 
@@ -366,7 +384,7 @@ entry fun join_entry(self: &mut Balance, other: Balance, ctx: &TxContext) {
 }
 
 /// Create a zero balance
-public fun zero(collection_id: ID, asset_id: u128, ctx: &mut TxContext): Balance {
+public(package) fun zero(collection_id: ID, asset_id: u128, ctx: &mut TxContext): Balance {
     Balance {
         id: object::new(ctx),
         collection: collection_id,
@@ -397,12 +415,37 @@ public fun burn(
     // Verify balance belongs to this collection
     assert!(object::id(collection) == balance_collection, EWrongCollection);
     
+    // Supply tracker must exist for consistent accounting - fail fast if missing
+    assert!(collection.supply.contains(asset_id), ESupplyNotInitialized);
+    
     // Use Supply::decrease_supply (has built-in underflow protection)
-    if (collection.supply.contains(asset_id)) {
-        let tracker = collection.supply.borrow_mut(asset_id);
-        // Split from balance sink and decrease supply
-        let burn_balance = tracker.balance_sink.split(amount);
-        tracker.supply.decrease_supply(burn_balance);
+    let tracker = collection.supply.borrow_mut(asset_id);
+    // Split from balance sink and decrease supply
+    let burn_balance = tracker.balance_sink.split(amount);
+    tracker.supply.decrease_supply(burn_balance);
+    
+    // Check if supply reached zero and cleanup metadata
+    // Note: SupplyTracker and Supply<T> remain in the table even at zero supply
+    // 
+    // Why SupplyTracker cannot be destroyed:
+    // - Supply<T> has `store` but NOT `drop` ability
+    // - balance::destroy_supply() is `public(package)` (only callable within sui package)
+    // - This is intentional design to:
+    //   * Prevent accidental supply destruction
+    //   * Maintain permanent supply history
+    //   * Enable re-minting without re-initialization
+    // 
+    // Storage cost: ~48 bytes per retired asset (acceptable for the guarantees provided)
+    // If this package gets included in sui std lib, we can consider adding a `drop` ability
+    let remaining_supply = tracker.supply.supply_value();
+    if (remaining_supply == 0) {
+        // Clean up metadata if it exists (free up storage)
+        if (collection.metadata.contains(asset_id)) {
+            collection.metadata.remove(asset_id);
+        };
+        
+        // Verify balance_sink is empty (should be after decrease_supply)
+        assert!(tracker.balance_sink.value() == 0, EInsufficientBalance);
     };
     
     event::emit(BurnEvent {
