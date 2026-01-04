@@ -53,9 +53,12 @@
 /// - Lower 64 bits: item_id (specific item within location)
 ///
 /// This scheme enables:
-/// - Querying all items at a location
-/// - Organizing tokens by game world regions
-/// - Hierarchical inventory systems
+/// - Querying all items at a location (using indexer)
+/// - Organizing tokens by game world regions, system, or assembly (using indexer)
+/// - Trading "items" via runtime assets
+///
+/// Things this scheme fails at:
+/// - Enabling clean-up of state. This would likely rely on client-side clean up of state.
 ///
 /// Custom schemes can use the full 128-bit space for alternative encodings.
 module multicoin::multicoin;
