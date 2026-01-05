@@ -11,12 +11,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install Sui CLI
+      - name: Install Homebrew
         run: |
-          sudo apt-get update
-          sudo apt-get install -y jq wget ca-certificates libssl-dev pkg-config build-essential
-          wget -qO- https://get.sui.io | sh
-          echo "$HOME/.sui/bin" >> $GITHUB_PATH
+          /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+          echo "/home/linuxbrew/.linuxbrew/bin" >> $GITHUB_PATH
+
+      - name: Install Sui using Homebrew
+        run: brew install sui
+
+      - name: YAML Setup
+        run: |
+          sui client --yes new-env --rpc https://fullnode.testnet.sui.io:443 --alias testnet
+          sui client switch --env testnet
       - name: Show Sui version
         run: sui --version || true
       - name: Build
@@ -37,12 +43,18 @@ jobs:
         with:
           fetch-depth: 0
       
-      - name: Install Sui CLI
+      - name: Install Homebrew
         run: |
-          sudo apt-get update
-          sudo apt-get install -y jq wget ca-certificates libssl-dev pkg-config build-essential
-          wget -qO- https://get.sui.io | sh
-          echo "$HOME/.sui/bin" >> $GITHUB_PATH
+          /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+          echo "/home/linuxbrew/.linuxbrew/bin" >> $GITHUB_PATH
+
+      - name: Install Sui using Homebrew
+        run: brew install sui
+
+      - name: YAML Setup
+        run: |
+          sui client --yes new-env --rpc https://fullnode.testnet.sui.io:443 --alias testnet
+          sui client switch --env testnet
       
       - name: Build package and generate bytecode
         id: build
