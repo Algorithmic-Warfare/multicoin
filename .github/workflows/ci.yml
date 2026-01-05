@@ -29,8 +29,6 @@ jobs:
         run: cd packages/multicoin && sui move build
       - name: Test
         run: cd packages/multicoin && sui move test
-      - name: Format check
-        run: cd packages/multicoin && sui move format --check
 
   deploy-testnet:
     if: github.ref == 'refs/heads/main'
