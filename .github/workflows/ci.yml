@@ -34,16 +34,135 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
       - name: Install Sui CLI
         run: |
           sudo apt-get update
           sudo apt-get install -y jq wget ca-certificates libssl-dev pkg-config build-essential
           wget -qO- https://get.sui.io | sh
           echo "$HOME/.sui/bin" >> $GITHUB_PATH
-      - name: Configure testnet env
-        env:
-          SUI_ENV: testnet
+      
+      - name: Build package and generate bytecode
+        id: build
         run: |
-          sui client active-env || sui client switch --env testnet
-      - name: Dry-run publish
-        run: sui client publish --skip-fetch-latest-gas-price --gas-budget 30000000 --dry-run .
+          # Build and test
+          sui move build
+          sui move test
+          
+          # Generate bytecode digest
+          BYTECODE=$(sui move build --dump-bytecode-as-base64 | tail -1)
+          echo "bytecode=$BYTECODE" >> $GITHUB_OUTPUT
+          
+          # Get package info from Move.toml
+          PACKAGE_ID=$(grep "published-at" Move.toml | cut -d'"' -f2 || echo "")
+          echo "package_id=$PACKAGE_ID" >> $GITHUB_OUTPUT
+          
+          echo "✅ Package built successfully"
+      
+      - name: Determine CAIP-19 identifier
+        id: caip19
+        env:
+          TESTNET_PACKAGE: sui:testnet/package:0x8aa293b4a9f2b25d4cec07ead1453685c65b4ee48bdc5913a2fb5c5e90bfb8ef
+        run: |
+          if [ -z "$TESTNET_PACKAGE" ]; then
+            echo "⚠️  TESTNET_PACKAGE_CAIP19 not configured, skipping upgrade proposal"
+            echo "caip19=" >> $GITHUB_OUTPUT
+            echo "skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "caip19=$TESTNET_PACKAGE" >> $GITHUB_OUTPUT
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Propose upgrade
+        if: steps.caip19.outputs.skip != 'true'
+        id: propose
+        env:
+          SIGNER_API_URL: https://signer-dev-api.trinary.exchange
+          SIGNER_API_KEY: ${{ secrets.SIGNER_API_KEY }}
+          PACKAGE_CAIP19: ${{ steps.caip19.outputs.caip19 }}
+          BYTECODE: ${{ steps.build.outputs.bytecode }}
+          GITHUB_SHA: ${{ github.sha }}
+        run: |
+          if [ -z "$SIGNER_API_URL" ] || [ -z "$SIGNER_API_KEY" ]; then
+            echo "⚠️  Signer API not configured, skipping upgrade proposal"
+            exit 0
+          fi
+          
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
+            "$SIGNER_API_URL/v1/propose-upgrade" \
+            -H "x-api-key: $SIGNER_API_KEY" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"package\": \"$PACKAGE_CAIP19\",
+              \"upgradeBytes\": \"$BYTECODE\",
+              \"github_sha\": \"$GITHUB_SHA\",
+              \"gasBudget\": 3000000000
+            }")
+          
+          HTTP_CODE=$(echo "$RESPONSE" | tail -1)
+          BODY=$(echo "$RESPONSE" | head -n -1)
+          
+          if [ "$HTTP_CODE" != "200" ] && [ "$HTTP_CODE" != "201" ]; then
+            echo "❌ Failed to propose upgrade (HTTP $HTTP_CODE)"
+            echo "$BODY" | jq .
+            exit 1
+          fi
+          
+          echo "✅ Upgrade proposal submitted successfully"
+          echo "$BODY" | jq .
+          
+          # Extract response fields
+          DIGEST=$(echo "$BODY" | jq -r '.digest')
+          PROPOSAL_ID=$(echo "$BODY" | jq -r '.proposalObjectId')
+          STATUS=$(echo "$BODY" | jq -r '.status')
+          
+          echo "digest=$DIGEST" >> $GITHUB_OUTPUT
+          echo "proposal_id=$PROPOSAL_ID" >> $GITHUB_OUTPUT
+          echo "status=$STATUS" >> $GITHUB_OUTPUT
+          
+          echo ""
+          echo "========================================"
+          echo "🔐 PROPOSAL CREATED - MANUAL APPROVAL REQUIRED"
+          echo "========================================"
+          echo ""
+          echo "📝 Proposal Object ID: $PROPOSAL_ID"
+          echo "📝 Transaction Digest: $DIGEST"
+          echo "📝 Status: $STATUS"
+          echo "📝 Commit: $GITHUB_SHA"
+          echo ""
+          echo "Next Steps:"
+          echo "1. Review code changes in commit: $GITHUB_SHA"
+          echo "2. Manual signers vote on-chain using CLI or Web UI"
+          echo "3. After threshold met, trigger 'Execute Upgrade' workflow"
+          echo ""
+          echo "Execute Upgrade Workflow Parameters:"
+          echo "  - Proposal Object ID: $PROPOSAL_ID"
+          echo "  - GitHub SHA: $GITHUB_SHA"
+          echo "  - Environment: testnet"
+          echo "========================================"
+      
+      - name: Save proposal details
+        if: steps.caip19.outputs.skip != 'true' && steps.propose.outputs.proposal_id
+        run: |
+          cat > proposal-details.json <<EOF
+          {
+            "proposalObjectId": "${{ steps.propose.outputs.proposal_id }}",
+            "digest": "${{ steps.propose.outputs.digest }}",
+            "status": "${{ steps.propose.outputs.status }}",
+            "githubSha": "${{ github.sha }}",
+            "package": "${{ steps.caip19.outputs.caip19 }}",
+            "environment": "testnet",
+            "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          }
+          EOF
+          cat proposal-details.json
+      
+      - name: Upload proposal artifacts
+        if: steps.caip19.outputs.skip != 'true' && steps.propose.outputs.proposal_id
+        uses: actions/upload-artifact@v4
+        with:
+          name: proposal-${{ github.sha }}-testnet
+          path: proposal-details.json
+          retention-days: 30

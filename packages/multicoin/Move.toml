@@ -1,16 +1,16 @@
 [package]
-name = "multicoin"
+name = "multicoin_mvp0"
 version = "0.0.1"
 published-at = ""
 edition = "2024"
 
 [dependencies]
+Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "framework/testnet" }
 
 [addresses]
 # Will be rewritten on publish
 admin =  "0x0"
 multicoin =  "0x0"
-
 
 # [dev-addresses]
 # admin =  "0xA11CE"
