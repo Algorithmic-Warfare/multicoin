@@ -19,9 +19,9 @@ jobs:
       - name: Install Sui using Homebrew
         run: brew install sui
 
-      - name: Config Setup
+      - name: YAML Setup
         run: |
-          sui client switch --env testnet
+          sui client switch --env testnet --yes 
       - name: Show Sui version
         run: sui --version || true
       - name: Build
@@ -52,7 +52,7 @@ jobs:
 
       - name: Config Setup
         run: |
-          sui client switch --env testnet
+          sui client switch --env testnet --yes 
       
       - name: Build package and generate bytecode
         id: build
