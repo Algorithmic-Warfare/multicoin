@@ -26,11 +26,11 @@ jobs:
       - name: Show Sui version
         run: sui --version || true
       - name: Build
-        run: sui move build
+        run: cd packages/multicoin && sui move build
       - name: Test
-        run: sui move test
+        run: cd packages/multicoin && sui move test
       - name: Format check
-        run: sui move format --check
+        run: cd packages/multicoin && sui move format --check
 
   deploy-testnet:
     if: github.ref == 'refs/heads/main'
@@ -59,6 +59,7 @@ jobs:
       - name: Build package and generate bytecode
         id: build
         run: |
+          cd packages/multicoin
           # Build and test
           sui move build
           sui move test
