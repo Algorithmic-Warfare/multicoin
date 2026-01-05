@@ -21,7 +21,8 @@ jobs:
 
       - name: YAML Setup
         run: |
-          sui client switch --env testnet --yes 
+          sui client --yes new-env --rpc https://fullnode.testnet.sui.io:443 --alias test
+          sui client switch --env test
       - name: Show Sui version
         run: sui --version || true
       - name: Build
@@ -52,7 +53,8 @@ jobs:
 
       - name: Config Setup
         run: |
-          sui client switch --env testnet --yes 
+          sui client --yes new-env --rpc https://fullnode.testnet.sui.io:443 --alias test
+          sui client switch --env test
       
       - name: Build package and generate bytecode
         id: build
