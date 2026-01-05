@@ -65,11 +65,13 @@ jobs:
           # Generate bytecode and extract modules array as JSON string
           BYTECODE_JSON=$(sui move build --dump-bytecode-as-base64 | tail -1)
           
-          # Extract just the modules array first item from the JSON and serialize it properly
+          # Extract modules, dependencies, and digest from the JSON
           MODULES=$(echo "$BYTECODE_JSON" | jq -c '.modules')
+          DIGEST=$(echo "$BYTECODE_JSON" | jq -c '.digest')
           
           # Save to output (will be used in JSON payload)
           echo "bytecode_modules=$MODULES" >> $GITHUB_OUTPUT
+          echo "bytecode_digest=$DIGEST" >> $GITHUB_OUTPUT
           
           # Get package info from Move.toml
           PACKAGE_ID=$(grep "published-at" Move.toml | cut -d'"' -f2 || echo "")
@@ -99,6 +101,7 @@ jobs:
           SIGNER_API_KEY: ${{ secrets.SIGNER_API_KEY }}
           PACKAGE_CAIP19: ${{ steps.caip19.outputs.caip19 }}
           BYTECODE_MODULES: ${{ steps.build.outputs.bytecode_modules }}
+          BYTECODE_DIGEST: ${{ steps.build.outputs.bytecode_digest }}
           GITHUB_SHA: ${{ github.sha }}
         run: |
           if [ -z "$SIGNER_API_URL" ] || [ -z "$SIGNER_API_KEY" ]; then
@@ -110,10 +113,12 @@ jobs:
           PAYLOAD=$(jq -n \
             --arg package "$PACKAGE_CAIP19" \
             --argjson modules "$BYTECODE_MODULES" \
+            --argjson digest "$BYTECODE_DIGEST" \
             --arg sha "$GITHUB_SHA" \
             '{
               package: $package,
               upgradeBytes: $modules,
+              digest: $digest,
               github_sha: $sha,
               gasBudget: 100000000
             }')
