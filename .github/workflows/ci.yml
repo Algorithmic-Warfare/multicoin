@@ -66,7 +66,7 @@ jobs:
           BYTECODE_JSON=$(sui move build --dump-bytecode-as-base64 | tail -1)
           
           # Extract just the modules array from the JSON and serialize it properly
-          MODULES=$(echo "$BYTECODE_JSON" | jq -c '.modules')
+          MODULES=$(echo "$BYTECODE_JSON" | jq -c '.modules[0]')
           
           # Save to output (will be used in JSON payload)
           echo "bytecode_modules=$MODULES" >> $GITHUB_OUTPUT
