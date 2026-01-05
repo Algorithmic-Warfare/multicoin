@@ -62,9 +62,14 @@ jobs:
           sui move build
           sui move test
           
-          # Generate bytecode digest
-          BYTECODE=$(sui move build --dump-bytecode-as-base64 | tail -1)
-          echo "bytecode=$BYTECODE" >> $GITHUB_OUTPUT
+          # Generate bytecode and extract modules array as JSON string
+          BYTECODE_JSON=$(sui move build --dump-bytecode-as-base64 | tail -1)
+          
+          # Extract just the modules array from the JSON and serialize it properly
+          MODULES=$(echo "$BYTECODE_JSON" | jq -c '.modules')
+          
+          # Save to output (will be used in JSON payload)
+          echo "bytecode_modules=$MODULES" >> $GITHUB_OUTPUT
           
           # Get package info from Move.toml
           PACKAGE_ID=$(grep "published-at" Move.toml | cut -d'"' -f2 || echo "")
@@ -93,7 +98,7 @@ jobs:
           SIGNER_API_URL: https://signer-dev-api.trinary.exchange
           SIGNER_API_KEY: ${{ secrets.SIGNER_API_KEY }}
           PACKAGE_CAIP19: ${{ steps.caip19.outputs.caip19 }}
-          BYTECODE: ${{ steps.build.outputs.bytecode }}
+          BYTECODE_MODULES: ${{ steps.build.outputs.bytecode_modules }}
           GITHUB_SHA: ${{ github.sha }}
         run: |
           if [ -z "$SIGNER_API_URL" ] || [ -z "$SIGNER_API_KEY" ]; then
@@ -101,16 +106,26 @@ jobs:
             exit 0
           fi
           
+          # Build JSON payload with proper escaping
+          PAYLOAD=$(jq -n \
+            --arg package "$PACKAGE_CAIP19" \
+            --argjson modules "$BYTECODE_MODULES" \
+            --arg sha "$GITHUB_SHA" \
+            '{
+              package: $package,
+              upgradeBytes: $modules,
+              github_sha: $sha,
+              gasBudget: 3000000000
+            }')
+          
+          echo "📤 Sending payload:"
+          echo "$PAYLOAD" | jq .
+          
           RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
             "$SIGNER_API_URL/v1/propose-upgrade" \
             -H "x-api-key: $SIGNER_API_KEY" \
             -H "Content-Type: application/json" \
-            -d "{
-              \"package\": \"$PACKAGE_CAIP19\",
-              \"upgradeBytes\": \"$BYTECODE\",
-              \"github_sha\": \"$GITHUB_SHA\",
-              \"gasBudget\": 3000000000
-            }")
+            -d "$PAYLOAD")
           
           HTTP_CODE=$(echo "$RESPONSE" | tail -1)
           BODY=$(echo "$RESPONSE" | head -n -1)
