@@ -115,7 +115,7 @@ jobs:
               package: $package,
               upgradeBytes: $modules,
               github_sha: $sha,
-              gasBudget: 1000000000
+              gasBudget: 100000000
             }')
           
           echo "📤 Sending payload:"
