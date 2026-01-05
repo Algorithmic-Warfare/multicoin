@@ -19,9 +19,8 @@ jobs:
       - name: Install Sui using Homebrew
         run: brew install sui
 
-      - name: YAML Setup
+      - name: Config Setup
         run: |
-          sui client --yes new-env --rpc https://fullnode.testnet.sui.io:443 --alias testnet
           sui client switch --env testnet
       - name: Show Sui version
         run: sui --version || true
@@ -51,9 +50,8 @@ jobs:
       - name: Install Sui using Homebrew
         run: brew install sui
 
-      - name: YAML Setup
+      - name: Config Setup
         run: |
-          sui client --yes new-env --rpc https://fullnode.testnet.sui.io:443 --alias testnet
           sui client switch --env testnet
       
       - name: Build package and generate bytecode
