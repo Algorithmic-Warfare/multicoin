@@ -383,8 +383,8 @@ entry fun join_entry(self: &mut Balance, other: Balance, ctx: &TxContext) {
     self.join(other, ctx);
 }
 
-/// Create a zero balance
-public(package) fun zero(collection_id: ID, asset_id: u128, ctx: &mut TxContext): Balance {
+/// Create a zero balance (useful for initialization or empty withdrawals)
+public fun zero(collection_id: ID, asset_id: u128, ctx: &mut TxContext): Balance {
     Balance {
         id: object::new(ctx),
         collection: collection_id,
