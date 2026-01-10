@@ -188,6 +188,10 @@ mprocs.yaml                            # Dev process orchestration
 - **NFT Collections**: Fungible NFTs with editions, tiered memberships
 - **Inventory Systems**: Location-based storage, cross-game assets
 
+## Upgrading package
+
+The package was initially manually deployed and then UpgradeCapability was transferred to a [QuorumUpgradeV2](https://github.com/MystenLabs/apps/blob/main/upgrade_policy/quorum_upgrade_v2/sources/quorum_upgrade.move) contract - managed by an internal multi-signer.
+
 ## License
 
 Apache-2.0 (matching Sui framework)
