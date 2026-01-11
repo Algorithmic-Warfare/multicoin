@@ -1,5 +1,5 @@
 [package]
-name = "multicoin_mvp0"
+name = "multicoin"
 version = "0.0.1"
 edition = "2024"
 
@@ -9,7 +9,7 @@ Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-fram
 [addresses]
 # Will be rewritten on publish
 admin =  "0x0"
-multicoin_mvp0 =  "0x0"
+multicoin =  "0x0"
 
 # [dev-addresses]
 # admin =  "0xA11CE"

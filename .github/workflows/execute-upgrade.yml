@@ -42,6 +42,7 @@ jobs:
         env:
           TESTNET_PACKAGE: ${{ secrets.TESTNET_PACKAGE_CAIP19 }}
           MAINNET_PACKAGE: ${{ secrets.MAINNET_PACKAGE_CAIP19 }}
+          PACKAGE_DESCRIPTOR: ${{ vars.PACKAGE_DESCRIPTOR || 'multicoin' }}
           ENVIRONMENT: ${{ inputs.environment }}
         run: |
           if [ "$ENVIRONMENT" = "mainnet" ]; then
@@ -49,6 +50,7 @@ jobs:
           else
             echo "caip19=$TESTNET_PACKAGE" >> $GITHUB_OUTPUT
           fi
+          echo "package_descriptor=${PACKAGE_DESCRIPTOR}" >> $GITHUB_OUTPUT
 
       - name: Verify proposal votes (optional)
         if: ${{ !inputs.skip_verification }}
@@ -98,6 +100,7 @@ jobs:
           SIGNER_API_URL: ${{ secrets.SIGNER_API_URL }}
           SIGNER_API_KEY: ${{ secrets.SIGNER_API_KEY }}
           PACKAGE_CAIP19: ${{ steps.caip19.outputs.caip19 }}
+          PACKAGE_DESCRIPTOR: ${{ steps.caip19.outputs.package_descriptor }}
           PROPOSAL_ID: ${{ inputs.proposal_object_id }}
           GITHUB_SHA: ${{ inputs.github_sha }}
         run: |
@@ -107,6 +110,7 @@ jobs:
             -H "Content-Type: application/json" \
             -d "{
               \"package\": \"$PACKAGE_CAIP19\",
+              \"package_descriptor\": \"$PACKAGE_DESCRIPTOR\",\
               \"github_sha\": \"$GITHUB_SHA\",
               \"proposalObjectId\": \"$PROPOSAL_ID\",
               \"gasBudget\": 5000000000
