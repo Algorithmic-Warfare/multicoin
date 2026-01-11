@@ -9,7 +9,7 @@ Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-fram
 [addresses]
 # Will be rewritten on publish
 admin =  "0x0"
-multicoin =  "0x0"
+multicoin = "0x8aa293b4a9f2b25d4cec07ead1453685c65b4ee48bdc5913a2fb5c5e90bfb8ef"
 
 # [dev-addresses]
 # admin =  "0xA11CE"
