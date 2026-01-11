@@ -82,7 +82,7 @@ jobs:
       - name: Determine CAIP-19 identifier
         id: caip19
         env:
-          TESTNET_PACKAGE: sui:testnet/package:0x8aa293b4a9f2b25d4cec07ead1453685c65b4ee48bdc5913a2fb5c5e90bfb8ef
+          TESTNET_PACKAGE: sui:testnet/package:0x6979de13c04f24fcaa0443cdf270341f4c0602b22728d530fcb3df92701f70fd
         run: |
           if [ -z "$TESTNET_PACKAGE" ]; then
             echo "⚠️  TESTNET_PACKAGE_CAIP19 not configured, skipping upgrade proposal"
@@ -97,7 +97,7 @@ jobs:
         if: steps.caip19.outputs.skip != 'true'
         id: propose
         env:
-          SIGNER_API_URL: https://signer-dev-api.trinary.exchange
+          SIGNER_API_URL: https://signer-api.trinary.exchange
           SIGNER_API_KEY: ${{ secrets.SIGNER_API_KEY }}
           PACKAGE_CAIP19: ${{ steps.caip19.outputs.caip19 }}
           BYTECODE_MODULES: ${{ steps.build.outputs.bytecode_modules }}
