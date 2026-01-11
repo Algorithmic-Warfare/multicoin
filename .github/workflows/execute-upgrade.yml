@@ -40,8 +40,8 @@ jobs:
       - name: Determine CAIP-19 identifier
         id: caip19
         env:
-          TESTNET_PACKAGE: ${{ secrets.TESTNET_PACKAGE_CAIP19 }}
-          MAINNET_PACKAGE: ${{ secrets.MAINNET_PACKAGE_CAIP19 }}
+          TESTNET_PACKAGE: sui:testnet/package:0x6979de13c04f24fcaa0443cdf270341f4c0602b22728d530fcb3df92701f70fd
+          MAINNET_PACKAGE: sui:mainnet/package:0x6979de13c04f24fcaa0443cdf270341f4c0602b22728d530fcb3df92701f70fd
           PACKAGE_DESCRIPTOR: ${{ vars.PACKAGE_DESCRIPTOR || 'multicoin' }}
           ENVIRONMENT: ${{ inputs.environment }}
         run: |

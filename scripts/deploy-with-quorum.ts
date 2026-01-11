@@ -3,7 +3,6 @@
 import { SuiClient, getFullnodeUrl } from '@mysten/sui/client';
 import { Transaction } from '@mysten/sui/transactions';
 import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519';
-import { fromB64 } from '@mysten/sui/utils';
 import { prepareAddressVecSet } from './utils';
 
 // Configuration

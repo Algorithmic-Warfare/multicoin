@@ -4,18 +4,3 @@ version = "0.0.1"
 edition = "2024"
 
 [dependencies]
-Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "framework/testnet" }
-
-[addresses]
-# Will be rewritten on publish
-# admin =  "0x0"
-multicoin = "0x8aa293b4a9f2b25d4cec07ead1453685c65b4ee48bdc5913a2fb5c5e90bfb8ef"
-
-# [dev-addresses]
-# admin =  "0xA11CE"
-
-[build]
-# (Removed unsupported 'docs' field causing warnings)
-
-#[lint]
-# Lint configuration placeholder (commented out due to schema warnings)
