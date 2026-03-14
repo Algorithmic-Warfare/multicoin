@@ -21,5 +21,8 @@
             "sui move format --install",
             "git add"
         ]
+    },
+    "dependencies": {
+        "@mysten/prettier-plugin-move": "^0.3.5"
     }
 }
