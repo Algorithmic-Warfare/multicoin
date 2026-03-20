@@ -6,5 +6,5 @@ edition = "2024"
 [dependencies]
 
 [environments]
-testnet_utopia = "0x0"
+testnet_utopia = "0x94b398c6a47ca9da9775ea16dfb6a0c3e5975e118c2bbc3563b892cfd7a3a5b5"
 testnet_stillness = "0x0"
