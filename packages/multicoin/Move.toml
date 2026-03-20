@@ -4,3 +4,7 @@ version = "0.0.1"
 edition = "2024"
 
 [dependencies]
+
+[environments]
+testnet_utopia = "0x0"
+testnet_stillness = "0x0"
