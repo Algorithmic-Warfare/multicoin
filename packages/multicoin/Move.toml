@@ -7,4 +7,4 @@ edition = "2024"
 
 [environments]
 testnet_utopia = "0x94b398c6a47ca9da9775ea16dfb6a0c3e5975e118c2bbc3563b892cfd7a3a5b5"
-testnet_stillness = "0x0"
+testnet_stillness = "0x7a8fb7c4bfc099e4fb28fdad3741450faace3d420f8fd93ec37c32148a641e73"
