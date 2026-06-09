@@ -3,7 +3,11 @@ name = "multicoin"
 version = "0.0.1"
 edition = "2024"
 
+[addresses]
+multicoin = "0x0"
+
 [dependencies]
+Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "framework/testnet" }
 
 [environments]
 testnet_utopia = "0x94b398c6a47ca9da9775ea16dfb6a0c3e5975e118c2bbc3563b892cfd7a3a5b5"
