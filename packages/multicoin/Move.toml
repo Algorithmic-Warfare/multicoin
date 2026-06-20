@@ -10,6 +10,6 @@ multicoin = "0x0"
 Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "framework/testnet" }
 
 [environments]
-testnet_utopia = "0x94b398c6a47ca9da9775ea16dfb6a0c3e5975e118c2bbc3563b892cfd7a3a5b5"
-testnet_stillness = "0x4a28acb02c16d4fbcead6b7b2a450fb42c2e04d77dd7e4533a65d6467f1907ac"
-testnet_wip = "0x4a28acb02c16d4fbcead6b7b2a450fb42c2e04d77dd7e4533a65d6467f1907ac"
+testnet_utopia = "4c78adac"
+testnet_stillness = "4c78adac"
+testnet_wip = "4c78adac"
