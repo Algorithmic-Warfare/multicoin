@@ -4,32 +4,14 @@
 [move]
 version = 4
 
-[pinned.localnet.MoveStdlib]
-source = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/move-stdlib", rev = "a14d9e8ddadfcea837de46b43d0b72a289320afb" }
-use_environment = "localnet"
-manifest_digest = "C4FE4C91DE74CBF223B2E380AE40F592177D21870DC2D7EB6227D2D694E05363"
-deps = {}
-
-[pinned.localnet.Sui]
-source = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "a14d9e8ddadfcea837de46b43d0b72a289320afb" }
-use_environment = "localnet"
-manifest_digest = "CC15CB146CA1113370B03476BFF694B88F43F77D8DEE7C23CC0C78AB0634420D"
-deps = { MoveStdlib = "MoveStdlib" }
-
-[pinned.localnet.multicoin]
-source = { root = true }
-use_environment = "localnet"
-manifest_digest = "AC71DA4CDBC7C13B0766E882C30ABD3DC6704CBDD0DE2B1C87F68EEDF8E9A2AE"
-deps = { Sui = "Sui" }
-
 [pinned.testnet.MoveStdlib]
-source = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/move-stdlib", rev = "94ad8ccd0ed6c089a9fe072ff80c918b5ab44943" }
+source = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/move-stdlib", rev = "68dc1b8f36b2dca183046c7f65c00c2d8509ac17" }
 use_environment = "testnet"
 manifest_digest = "C4FE4C91DE74CBF223B2E380AE40F592177D21870DC2D7EB6227D2D694E05363"
 deps = {}
 
 [pinned.testnet.Sui]
-source = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "94ad8ccd0ed6c089a9fe072ff80c918b5ab44943" }
+source = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "68dc1b8f36b2dca183046c7f65c00c2d8509ac17" }
 use_environment = "testnet"
 manifest_digest = "7AFB66695545775FBFBB2D3078ADFD084244D5002392E837FDE21D9EA1C6D01C"
 deps = { MoveStdlib = "MoveStdlib" }
@@ -39,57 +21,3 @@ source = { root = true }
 use_environment = "testnet"
 manifest_digest = "0532D72C4F42A4472D331C54E2F8FB1595A305815D58568D26C6F8A4AC9BBFCE"
 deps = { Sui = "Sui" }
-
-[pinned.testnet_stillness.MoveStdlib]
-source = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/move-stdlib", rev = "b38bca86f0323b3fe8b6b7f4ca0cd7ae7faebe4b" }
-use_environment = "testnet_stillness"
-manifest_digest = "C4FE4C91DE74CBF223B2E380AE40F592177D21870DC2D7EB6227D2D694E05363"
-deps = {}
-
-[pinned.testnet_stillness.Sui]
-source = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "b38bca86f0323b3fe8b6b7f4ca0cd7ae7faebe4b" }
-use_environment = "testnet_stillness"
-manifest_digest = "38D8855849DF7CA0FAD3B9510DD9EC3755149F5B283E45CA6547194ADFF90D73"
-deps = { MoveStdlib = "MoveStdlib" }
-
-[pinned.testnet_wip.multicoin]
-source = { root = true }
-use_environment = "testnet_wip"
-manifest_digest = "16363423CD37589C5B9A56E3F9E984FED988276E0134635135B45CB4480A9484"
-deps = { std = "MoveStdlib", sui = "Sui" }
-
-[pinned.testnet_wip.MoveStdlib]
-source = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/move-stdlib", rev = "b38bca86f0323b3fe8b6b7f4ca0cd7ae7faebe4b" }
-use_environment = "testnet_wip"
-manifest_digest = "C4FE4C91DE74CBF223B2E380AE40F592177D21870DC2D7EB6227D2D694E05363"
-deps = {}
-
-[pinned.testnet_wip.Sui]
-source = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "b38bca86f0323b3fe8b6b7f4ca0cd7ae7faebe4b" }
-use_environment = "testnet_wip"
-manifest_digest = "38D8855849DF7CA0FAD3B9510DD9EC3755149F5B283E45CA6547194ADFF90D73"
-deps = { MoveStdlib = "MoveStdlib" }
-
-[pinned.testnet_wip.multicoin]
-source = { root = true }
-use_environment = "testnet_wip"
-manifest_digest = "16363423CD37589C5B9A56E3F9E984FED988276E0134635135B45CB4480A9484"
-deps = { std = "MoveStdlib", sui = "Sui" }
-
-[pinned.testnet_utopia.MoveStdlib]
-source = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/move-stdlib", rev = "b38bca86f0323b3fe8b6b7f4ca0cd7ae7faebe4b" }
-use_environment = "testnet_utopia"
-manifest_digest = "C4FE4C91DE74CBF223B2E380AE40F592177D21870DC2D7EB6227D2D694E05363"
-deps = {}
-
-[pinned.testnet_utopia.Sui]
-source = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "b38bca86f0323b3fe8b6b7f4ca0cd7ae7faebe4b" }
-use_environment = "testnet_utopia"
-manifest_digest = "9180BCCAED6A8C6414AF693DC2ABBAFDB0B4A4A1D5A4272617BCD455B201BEC2"
-deps = { MoveStdlib = "MoveStdlib" }
-
-[pinned.testnet_utopia.multicoin]
-source = { root = true }
-use_environment = "testnet_utopia"
-manifest_digest = "9F551938EB5AD61A0380873EAE676BEEB3328A36774B6653FA7CC61AEB133EC7"
-deps = { std = "MoveStdlib", sui = "Sui" }
